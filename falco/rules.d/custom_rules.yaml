@@ -1,0 +1,34 @@
+# Custom rules for the case study. They reuse the macros `spawned_process`
+# and `container` that ship with Falco's default rules.
+
+- rule: Network Tool Run In Container
+  desc: >
+    A download/network tool (curl or wget) was executed inside a container.
+    Attackers use these to fetch malware or exfiltrate data.
+  condition: >
+    spawned_process and
+    container and
+    proc.name in (curl, wget)
+  output: >
+    Network tool run in container
+    (user=%user.name container=%container.name image=%container.image.repository
+    command=%proc.cmdline parent=%proc.pname)
+  priority: WARNING
+  tags: [container, network, custom]
+
+- rule: Web Root Modified In Container
+  desc: >
+    A file under the nginx web root was opened for writing. This can indicate
+    website defacement or planting of a web shell.
+  condition: >
+    evt.type in (open, openat, openat2) and
+    evt.is_open_write=true and
+    fd.typechar='f' and
+    container and
+    fd.name startswith /usr/share/nginx/html
+  output: >
+    Web root modified
+    (user=%user.name container=%container.name file=%fd.name
+    command=%proc.cmdline)
+  priority: CRITICAL
+  tags: [container, filesystem, custom]

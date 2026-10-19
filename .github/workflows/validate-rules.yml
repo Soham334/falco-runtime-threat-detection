@@ -1,0 +1,20 @@
+name: Validate Falco rules
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate Compose file
+        run: docker compose config -q
+      - name: Validate custom Falco rules
+        run: |
+          docker run --rm \
+            -v "$PWD/falco/rules.d/custom_rules.yaml:/custom_rules.yaml:ro" \
+            --entrypoint falco falcosecurity/falco:0.45.0 \
+            -V /etc/falco/falco_rules.yaml -V /custom_rules.yaml

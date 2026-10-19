@@ -1,0 +1,23 @@
+# Falco runtime-security case study
+# "victim-web" = the sample application being protected
+# "falco"      = runtime threat detection watching every container on the host
+services:
+  victim-web:
+    image: nginx:1.27-alpine
+    container_name: victim-web
+    ports:
+      - "8080:80"
+
+  falco:
+    image: falcosecurity/falco:0.45.0
+    container_name: falco
+    privileged: true            # Falco needs kernel-level visibility
+    restart: unless-stopped
+    volumes:
+      - /sys/kernel/tracing:/sys/kernel/tracing:ro
+      - /var/run/docker.sock:/host/var/run/docker.sock
+      - /proc:/host/proc:ro
+      - /etc:/host/etc:ro
+      - ./falco/config.d/custom.yaml:/etc/falco/config.d/custom.yaml:ro
+      - ./falco/rules.d/custom_rules.yaml:/etc/falco/rules.d/custom_rules.yaml:ro
+      - ./logs:/var/log/falco

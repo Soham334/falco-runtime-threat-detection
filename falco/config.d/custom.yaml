@@ -1,0 +1,9 @@
+# Extra Falco settings, merged on top of /etc/falco/falco.yaml
+stdout_output:
+  enabled: true
+
+# Also write every alert to a file (used for screenshots, grep and Discord forwarding)
+file_output:
+  enabled: true
+  keep_alive: false
+  filename: /var/log/falco/events.log
